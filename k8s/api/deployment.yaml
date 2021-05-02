@@ -1,26 +1,31 @@
-apiVersion: aoos/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
 spec:
+  replicas: 20
   selector:
     matchLabels:
       app: api
-    template:
-      metadata:
-        labels:
-          app: api
-        spec:
-          containers:
-            name: api
-              image: joaovfritzke/api-bootcamp-produto:v1
-              ports:
-                containerPort: 8080
-              env:
-                name: MONGODB_URI
-                value: mongodb://mongouser:mongopwd@mongodb-service:27017/admin
+  template:
+    metadata:  
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"        
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: joaovfritzke/api-produto           
+          ports: 
+          - containerPort: 8080
+          env: 
+          - name: MONGODB_URI
+            value: mongodb://mongouser:mongopwd@mongodb-service:27017/admin
 
----
+--- 
 
 apiVersion: v1
 kind: Service
@@ -30,6 +35,7 @@ spec:
   selector:
     app: api
   ports:
-    port: 80
-      targetPort: 8080
+    - port: 80
+      targetPort: 8080   
+      nodePort: 30000   
   type: LoadBalancer
